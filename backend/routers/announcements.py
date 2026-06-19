@@ -13,6 +13,28 @@ router = APIRouter(tags=["announcements"])
 _RANGE_DAYS = {"D": 1, "W": 7, "M": 30}
 
 
+@router.get("/crawl/logs")
+def crawl_logs(limit: int = 20, db: Session = Depends(get_db)):
+    """최근 크롤링 실행 이력 조회."""
+    from ..models import CrawlLog
+    from sqlalchemy import select
+    logs = db.execute(
+        select(CrawlLog).order_by(CrawlLog.started_at.desc()).limit(limit)
+    ).scalars().all()
+    return [
+        {
+            "agency": l.source_agency,
+            "started_at": l.started_at.isoformat() if l.started_at else None,
+            "finished_at": l.finished_at.isoformat() if l.finished_at else None,
+            "items_found": l.items_found,
+            "items_new": l.items_new,
+            "status": l.status,
+            "error_msg": l.error_msg,
+        }
+        for l in logs
+    ]
+
+
 @router.post("/crawl")
 def trigger_crawl():
     """모든 기관 크롤러 즉시 수동 실행."""
