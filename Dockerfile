@@ -21,11 +21,13 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 
 # 앱 코드 복사
 COPY --chown=user backend/ backend/
-COPY --chown=user dept.xlsx dept.xlsx
+COPY --chown=user start.sh start.sh
+RUN chmod +x start.sh
 
 # SQLite 데이터 디렉터리 생성
 RUN mkdir -p data
 
 EXPOSE 7860
 
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# dept.xlsx는 빌드 컨텍스트 바이너리 제한으로 start.sh에서 런타임 다운로드
+CMD ["./start.sh"]
