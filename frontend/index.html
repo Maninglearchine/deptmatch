@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>금융공시 모니터링</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ── HEADER ─────────────────────────────────────────────── -->
+<header class="header">
+  <div class="header-inner">
+    <a href="index.html" class="header-logo">금융공시 모니터링</a>
+    <nav class="header-nav">
+      <a href="#" class="nav-link" id="telegramBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.88 13.47l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.834.95z"/></svg>
+        Telegram
+      </a>
+      <a href="about.html" class="nav-link">About</a>
+      <a href="#" class="nav-link nav-feedback">피드백 <span class="badge-beta">Beta</span></a>
+    </nav>
+  </div>
+</header>
+
+<!-- ── LAYOUT ─────────────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">기간</div>
+      <div class="range-group">
+        <button class="range-btn" data-range="D">D</button>
+        <button class="range-btn" data-range="W">W</button>
+        <button class="range-btn active" data-range="M">M</button>
+        <button class="range-btn" data-range="ALL">ALL</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">기관</div>
+      <ul class="filter-list" id="agencyFilter">
+        <li><label><input type="checkbox" value="all" checked /> <span>전체</span></label></li>
+        <li><label><input type="checkbox" value="금융감독원" checked /> <span class="agency-dot fss"></span>금융감독원 <em class="count" id="cnt-금융감독원">0</em></label></li>
+        <li><label><input type="checkbox" value="금융위원회" checked /> <span class="agency-dot fsc"></span>금융위원회 <em class="count" id="cnt-금융위원회">0</em></label></li>
+        <li><label><input type="checkbox" value="금융정보분석원" checked /> <span class="agency-dot kofiu"></span>금융정보분석원 <em class="count" id="cnt-금융정보분석원">0</em></label></li>
+        <li><label><input type="checkbox" value="법령해석포털" checked /> <span class="agency-dot moleg"></span>법령해석포털 <em class="count" id="cnt-법령해석포털">0</em></label></li>
+        <li><label><input type="checkbox" value="한국은행" checked /> <span class="agency-dot bok"></span>한국은행 <em class="count" id="cnt-한국은행">0</em></label></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">카테고리</div>
+      <ul class="filter-list" id="categoryFilter">
+        <li><label><input type="checkbox" value="all" checked /> <span>전체</span></label></li>
+        <li><label><input type="checkbox" value="보도자료" checked /> 보도자료</label></li>
+        <li><label><input type="checkbox" value="고시·공고" checked /> 고시·공고</label></li>
+        <li><label><input type="checkbox" value="의결결과" checked /> 의결결과</label></li>
+        <li><label><input type="checkbox" value="법령해석" checked /> 법령해석</label></li>
+        <li><label><input type="checkbox" value="제재공시" checked /> 제재공시</label></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">신뢰도 필터</div>
+      <div class="conf-filter">
+        <input type="range" id="confSlider" min="0" max="100" value="0" class="slider" />
+        <div class="conf-filter-labels">
+          <span>0%</span>
+          <span id="confVal">0% 이상</span>
+          <span>100%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">담당 부서</div>
+      <div class="dept-search-wrap">
+        <input type="text" id="deptSearch" class="dept-input" placeholder="부서명 검색..." />
+      </div>
+      <ul class="filter-list dept-list" id="deptFilter"></ul>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <div class="main-toolbar">
+      <div class="result-count"><span id="totalCount">0</span>건</div>
+      <div class="toolbar-right">
+        <label class="review-toggle">
+          <input type="checkbox" id="showReviewOnly" />
+          <span>수동검토 필요만 보기</span>
+        </label>
+      </div>
+    </div>
+
+    <div id="feedList" class="feed-list"></div>
+
+    <div class="pagination" id="pagination"></div>
+  </main>
+</div>
+
+<!-- ── MODAL: 공시 상세 ─────────────────────────────────────── -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
