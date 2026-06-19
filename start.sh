@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# dept.xlsx: 빌드 컨텍스트 바이너리 제한 우회 — 런타임에 HF Hub에서 다운로드
+# dept.xlsx: private HF Dataset에서 런타임 다운로드 (HF_TOKEN Space secret 필요)
 python - <<'PYEOF'
 import os, shutil
 from huggingface_hub import hf_hub_download
@@ -10,15 +10,18 @@ dest = "/home/user/app/dept.xlsx"
 if os.path.exists(dest):
     print("[OK] dept.xlsx 이미 존재")
 else:
-    print("[다운로드] dept.xlsx ...")
+    token = os.environ.get("HF_TOKEN")
+    if not token:
+        raise RuntimeError("HF_TOKEN 환경변수가 없습니다. Space Secrets에 추가해주세요.")
+    print("[다운로드] dept.xlsx from HF Dataset (maninglearchine/dept-data)...")
     path = hf_hub_download(
-        repo_id="maninglearchine/deptmatch-api",
+        repo_id="maninglearchine/dept-data",
         filename="dept.xlsx",
-        repo_type="space",
-        token=os.environ.get("HF_TOKEN"),
+        repo_type="dataset",
+        token=token,
     )
     shutil.copy(path, dest)
-    print("[OK] dept.xlsx 준비 완료")
+    print("[OK] dept.xlsx 준비 완료:", dest)
 PYEOF
 
 mkdir -p /home/user/app/data
