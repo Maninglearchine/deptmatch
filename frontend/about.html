@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About | 금융공시 모니터링</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    window.ENV_API_BASE = 'https://maninglearchine-deptmatch-api.hf.space/api/v1';
+  </script>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <a href="index.html" class="header-logo">금융공시 모니터링</a>
+    <nav class="header-nav">
+      <a href="#" class="nav-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.88 13.47l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.834.95z"/></svg>
+        Telegram
+      </a>
+      <a href="about.html" class="nav-link active">About</a>
+    </nav>
+  </div>
+</header>
+
+<div class="about-wrap">
+  <div class="about-container">
+
+    <section class="about-section">
+      <h1 class="about-title">서비스 소개</h1>
+      <p class="about-desc">
+        금융위원회, 금융감독원, 금융정보분석원, 법령해석포털, 한국은행의 공시·공고·보도자료를
+        <strong>자동으로 수집</strong>하고, AI 모델이 본문을 분석하여
+        <strong>사내 담당 부서를 자동으로 매칭</strong>합니다.
+      </p>
+      <p class="about-desc">
+        담당자는 단일 화면에서 관련 공시를 빠르게 파악하고 후속 조치를 취할 수 있습니다.
+      </p>
+    </section>
+
+    <section class="about-section">
+      <h2 class="about-subtitle">데이터 수집 주기</h2>
+      <div class="source-status-table">
+        <div class="status-row header-row">
+          <span>기관</span><span>카테고리</span><span>수집 주기</span><span>상태</span>
+        </div>
+        <div class="status-row">
+          <span>금융위원회</span>
+          <span>보도자료·고시·의결결과</span>
+          <span>매 1시간</span>
+          <span class="status-dot active"></span>
+        </div>
+        <div class="status-row">
+          <span>금융감독원</span>
+          <span>보도자료·제재공시</span>
+          <span>매 1시간</span>
+          <span class="status-dot active"></span>
+        </div>
+        <div class="status-row">
+          <span>금융정보분석원</span>
+          <span>보도자료·고시</span>
+          <span>매 1시간</span>
+          <span class="status-dot active"></span>
+        </div>
+        <div class="status-row">
+          <span>법령해석포털</span>
+          <span>법령해석·의견서</span>
+          <span>매 2시간</span>
+          <span class="status-dot active"></span>
+        </div>
+        <div class="status-row">
+          <span>한국은행</span>
+          <span>금통위 의결·보도자료</span>
+          <span>매 2시간</span>
+          <span class="status-dot active"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <h2 class="about-subtitle">부서 자동 매칭 모델</h2>
+      <p class="about-desc">
+        BAAI/bge-m3 기반 Hybrid Retrieval + Cross-Encoder 재순위화 파이프라인으로
+        공시 본문을 분석하고 담당 부서를 예측합니다.
+      </p>
+      <div class="about-model-info">
+        <div class="model-item">
+          <span class="model-label">임베딩 모델</span>
+          <span class="model-value">BAAI/bge-m3 (최대 8,192 토큰)</span>
+        </div>
+        <div class="model-item">
+          <span class="model-label">검색 방식</span>
+          <span class="model-value">Dense(55%) + TF-IDF(25%) + BM25(20%)</span>
+        </div>
+        <div class="model-item">
+          <span class="model-label">재순위화</span>
+          <span class="model-value">BAAI/bge-reranker-v2-m3 Cross-Encoder</span>
+        </div>
+        <div class="model-item">
+          <span class="model-label">신뢰도 기준</span>
+          <span class="model-value">0.7 이상 자동매칭 / 0.4 미만 수동검토</span>
+        </div>
+      </div>
+    </section>
+
+    <footer class="about-footer">
+      <p>이 서비스는 공식 채널이 아닙니다. 원문은 각 기관 공식 사이트에서 확인하세요.</p>
+    </footer>
+
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

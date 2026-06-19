@@ -68,8 +68,6 @@ desktop.ini
 .playwright-mcp/
 .claude/
 
-# Excluded pages
-frontend/about.html
 
 # Logs
 *.log

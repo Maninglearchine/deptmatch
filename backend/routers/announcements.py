@@ -13,6 +13,30 @@ router = APIRouter(tags=["announcements"])
 _RANGE_DAYS = {"D": 1, "W": 7, "M": 30}
 
 
+@router.post("/crawl")
+def trigger_crawl():
+    """모든 기관 크롤러 즉시 수동 실행."""
+    import threading
+    from ..services.scheduler import _run_crawl
+    from ..crawlers.fsc import crawl as fsc_crawl
+    from ..crawlers.fss import crawl as fss_crawl
+    from ..crawlers.kofiu import crawl as kofiu_crawl
+    from ..crawlers.moleg import crawl as moleg_crawl
+    from ..crawlers.bok import crawl as bok_crawl
+
+    jobs = [
+        ("금융위원회",     fsc_crawl),
+        ("금융감독원",     fss_crawl),
+        ("금융정보분석원", kofiu_crawl),
+        ("법령해석포털",   moleg_crawl),
+        ("한국은행",       bok_crawl),
+    ]
+    for name, fn in jobs:
+        threading.Thread(target=_run_crawl, args=[name, fn], daemon=True).start()
+
+    return {"status": "started", "agencies": [name for name, _ in jobs]}
+
+
 @router.get("/announcements", response_model=AnnouncementList)
 def list_announcements(
     source_agency: Optional[str] = None,
