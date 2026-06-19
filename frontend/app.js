@@ -1,9 +1,11 @@
 /* ============================================================
    app.js — 금융공시 모니터링 프론트엔드
-   API_BASE: 실제 백엔드 주소. null 로 바꾸면 목업 데이터로 동작.
+   API_BASE: 실제 백엔드 주소. null 이면 목업 데이터로 동작.
+   - 로컬 개발: 'http://localhost:8000/api/v1'
+   - 운영 배포: 백엔드 서버 URL (Railway/Render 등)
 ============================================================ */
 
-const API_BASE = 'http://localhost:8000/api/v1'; // null 로 바꾸면 목업 데이터 사용
+const API_BASE = window.ENV_API_BASE || null; // index.html의 window.ENV_API_BASE 로 주입
 
 /* ── 목업 데이터 ────────────────────────────────────────────── */
 const MOCK_DATA = [
