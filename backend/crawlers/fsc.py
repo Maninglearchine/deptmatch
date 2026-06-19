@@ -25,26 +25,41 @@ class FscCrawler(BaseCrawler):
         for category, url in _LIST_URLS.items():
             try:
                 soup = self.fetch(url)
-                rows = soup.select("table tbody tr, ul.board_list li")
-                for row in rows:
-                    a = row.select_one("a[href]")
+                # 구조: <ul><li><a href="/no01xxxx/NNNNN?...">제목</a><div>담당부서...</div><div>날짜</div></li>
+                for row in soup.select("ul li"):
+                    a = None
+                    for link in row.select("a[href]"):
+                        href = link.get("href", "")
+                        # 게시물 링크는 /no01로 시작 (파일 다운로드 /comm/getFile 제외)
+                        if href.startswith("/no01") or href.startswith("/no02") or href.startswith("/no03"):
+                            a = link
+                            break
                     if not a:
                         continue
                     title = a.get_text(strip=True)
+                    if not title or len(title) < 3:
+                        continue
                     href = a["href"]
                     full_url = (_BASE + href) if href.startswith("/") else href
 
-                    date_el = row.select_one("td.date, .date, td:last-child")
-                    date_str = date_el.get_text(strip=True) if date_el else ""
+                    divs = row.select("div")
+                    date_str = divs[-1].get_text(strip=True) if divs else ""
                     published_at = _parse_date(date_str)
 
-                    if title and full_url:
-                        items.append({
-                            "category": category,
-                            "title": title,
-                            "url": full_url,
-                            "published_at": published_at,
-                        })
+                    dept_raw = ""
+                    for div in divs[:-1]:
+                        text = div.get_text(strip=True)
+                        if "담당부서" in text:
+                            dept_raw = text
+                            break
+
+                    items.append({
+                        "category": category,
+                        "title": title,
+                        "url": full_url,
+                        "published_at": published_at,
+                        "author_dept_raw": dept_raw,
+                    })
             except Exception as exc:
                 logger.error("FSC 목록 오류 [%s]: %s", category, exc)
         return items
@@ -54,11 +69,11 @@ class FscCrawler(BaseCrawler):
             return {}
         try:
             soup = self.fetch(url)
-            body_el = soup.select_one(".view_content, .board_view_content, .cont_bx")
+            body_el = soup.select_one(".view_content, .board_view_content, .cont_bx, .view_cont")
             body = body_el.get_text("\n", strip=True)[:3000] if body_el else ""
 
             dept_raw = ""
-            for el in soup.select(".info_list li, .detail_info li, .view_info li"):
+            for el in soup.select(".info_list li, .detail_info li, .view_info li, .board_info li"):
                 text = el.get_text(strip=True)
                 if "담당부서" in text or "담당과" in text:
                     dept_raw = text

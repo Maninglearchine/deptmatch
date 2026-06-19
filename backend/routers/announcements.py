@@ -35,6 +35,35 @@ def crawl_logs(limit: int = 20, db: Session = Depends(get_db)):
     ]
 
 
+@router.get("/debug/fetch")
+def debug_fetch(url: str):
+    """크롤러가 실제로 받는 HTML 앞부분을 반환 (배포 환경 셀렉터 디버그용)."""
+    import httpx
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept-Language": "ko-KR,ko;q=0.9",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    }
+    try:
+        r = httpx.get(url, headers=headers, timeout=20, verify=False, follow_redirects=True)
+        html = r.text
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html, "lxml")
+        tables = [{"class": t.get("class", []), "rows": len(t.select("tbody tr"))} for t in soup.select("table")[:5]]
+        uls = [{"class": u.get("class", []), "lis": len(u.select("li"))} for u in soup.select("ul")[:5]]
+        first_a = soup.select_one("a[href]")
+        return {
+            "status_code": r.status_code,
+            "html_len": len(html),
+            "html_preview": html[:1500],
+            "tables": tables,
+            "uls": uls,
+            "first_a": {"href": first_a.get("href"), "text": first_a.get_text()[:50]} if first_a else None,
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
 @router.post("/crawl")
 def trigger_crawl():
     """모든 기관 크롤러 즉시 수동 실행."""
