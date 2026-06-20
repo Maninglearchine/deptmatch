@@ -243,11 +243,13 @@ class DeptMatcher:
 
 
 _matcher: DeptMatcher | None = None
+_matcher_lock = __import__("threading").Lock()
 
 
 def get_matcher() -> DeptMatcher:
     global _matcher
-    if _matcher is None:
-        _matcher = DeptMatcher()
-        _matcher.load()
+    with _matcher_lock:
+        if _matcher is None:
+            _matcher = DeptMatcher()
+            _matcher.load()
     return _matcher

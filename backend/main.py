@@ -8,7 +8,11 @@ from .services.scheduler import start_scheduler, shutdown_scheduler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import asyncio
     create_tables()
+    # 매처를 스케줄러보다 먼저 로드 (스레드풀에서 실행해 이벤트 루프 블록 방지)
+    from .services.matcher import get_matcher
+    await asyncio.get_event_loop().run_in_executor(None, get_matcher)
     start_scheduler()
     yield
     shutdown_scheduler()
