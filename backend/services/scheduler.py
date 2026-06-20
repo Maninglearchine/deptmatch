@@ -20,19 +20,30 @@ def _run_crawl(agency_name: str, crawler_fn):
     try:
         items = crawler_fn()
         log.items_found = len(items)
+        db.commit()  # items_found 즉시 기록
+
         matcher = get_matcher()
         new_count = 0
 
         from sqlalchemy import select as sa_select
+        from sqlalchemy.exc import IntegrityError
+
+        # 배치 단위 중복 URL 사전 제거 (레이스 컨디션 완화)
+        urls = [item["url"] for item in items]
+        existing_urls: set[str] = set()
+        if urls:
+            existing_urls = set(
+                db.execute(
+                    sa_select(Announcement.url).where(Announcement.url.in_(urls))
+                ).scalars().all()
+            )
+
         for item in items:
-            exists = db.execute(
-                sa_select(Announcement).where(Announcement.url == item["url"])
-            ).scalar_one_or_none()
-            if exists:
+            if item["url"] in existing_urls:
                 continue
 
             result = matcher.predict(f"{item['title']} {item.get('body_text', '')}")
-            db.add(Announcement(
+            ann = Announcement(
                 source_agency=item["source_agency"],
                 agency_class=item["agency_class"],
                 category=item["category"],
@@ -45,8 +56,15 @@ def _run_crawl(agency_name: str, crawler_fn):
                 author_dept_raw=item.get("author_dept_raw", ""),
                 contact_raw=item.get("contact_raw", ""),
                 body_text=item.get("body_text", ""),
-            ))
-            new_count += 1
+            )
+            try:
+                # savepoint: 아이템 하나 실패해도 세션 유지
+                with db.begin_nested():
+                    db.add(ann)
+                new_count += 1
+                existing_urls.add(item["url"])  # 동일 배치 내 중복 방지
+            except IntegrityError:
+                logger.debug("[%s] 중복 URL 건너뜀: %s", agency_name, item["url"])
 
         db.commit()
         log.items_new = new_count

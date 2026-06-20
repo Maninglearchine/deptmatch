@@ -2,6 +2,7 @@
 금융감독원 (fss.or.kr) 크롤러
 보도자료 / 제재공시
 """
+import re
 import logging
 from datetime import datetime
 from .base import BaseCrawler
@@ -13,6 +14,8 @@ _LIST_URLS = {
     "보도자료": "https://www.fss.or.kr/fss/bbs/B0000188/list.do?menuNo=200218",
     "제재공시": "https://www.fss.or.kr/fss/bbs/B0000161/list.do?menuNo=200478",
 }
+# 날짜 패턴 (YYYY-MM-DD 또는 YYYY.MM.DD)
+_DATE_RE = re.compile(r'\d{4}[-./]\d{2}[-./]\d{2}')
 
 
 class FssCrawler(BaseCrawler):
@@ -24,21 +27,18 @@ class FssCrawler(BaseCrawler):
         for category, url in _LIST_URLS.items():
             try:
                 soup = self.fetch(url)
-                # 구조: <table><tbody><tr>
-                #   <td class="num no">번호</td>
-                #   <td class="title"><a href="/fss/bbs/.../view.do?nttId=...">제목</a></td>
-                #   <td><span class="only-m">담당부서</span>부서명</td>
-                #   <td><span class="only-m">등록일</span>2026-06-19</td>
-                # </tr></tbody></table>
+                # 보도자료 컬럼: 번호 | 제목(td.title) | 담당부서 | 등록일 | 첨부 | (영상) | 조회수
+                # 제재공시 컬럼: 번호 | 금융업종 | 제목(td.title) | 담당부서 | 제재조치요구일 | 첨부 | 조회수
+                # → 테이블마다 컬럼 위치가 다르므로 정규식으로 날짜 탐지
                 rows = soup.select("table tbody tr")
-                logger.debug("FSS [%s] 행 수: %d (URL: %s)", category, len(rows), url)
+                logger.debug("FSS [%s] 행 수: %d", category, len(rows))
                 for row in rows:
                     tds = row.select("td")
                     if len(tds) < 3:
                         continue
                     a = row.select_one("td.title a, td.subject a")
                     if not a:
-                        a = row.select_one("td a[href*='/view.do'], td a[href*='/bbs/']")
+                        a = row.select_one("td a[href*='/view.do']")
                     if not a:
                         continue
                     title = a.get_text(strip=True)
@@ -50,18 +50,19 @@ class FssCrawler(BaseCrawler):
                     elif not href.startswith("http"):
                         continue
 
-                    # td[2]: 담당부서 (span.only-m 제거 후 텍스트)
-                    dept_raw = ""
-                    if len(tds) > 2:
-                        dept_raw = tds[2].get_text(strip=True).replace("담당부서", "").strip()
-
-                    # td[3]: 등록일
+                    # 날짜: 모든 td를 스캔하여 날짜 패턴 탐지
                     date_str = ""
-                    if len(tds) > 3:
-                        date_str = tds[3].get_text(strip=True).replace("등록일", "").strip()
+                    dept_raw = ""
+                    for td in tds:
+                        td_text = td.get_text(strip=True)
+                        if not date_str:
+                            m = _DATE_RE.search(td_text)
+                            if m:
+                                date_str = m.group()
+                        if "담당부서" in td_text and td.get("class") != ["title"]:
+                            dept_raw = td_text.replace("담당부서", "").strip()
 
                     published_at = _parse_date(date_str)
-
                     items.append({
                         "category": category,
                         "title": title,
