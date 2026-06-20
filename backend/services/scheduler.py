@@ -42,7 +42,13 @@ def _run_crawl(agency_name: str, crawler_fn):
             if item["url"] in existing_urls:
                 continue
 
-            result = matcher.predict(f"{item['title']} {item.get('body_text', '')}")
+            author_dept = item.get('author_dept_raw', '').strip()
+            query_text = item['title']
+            if author_dept:
+                query_text = f"{item['title']}\n담당부서: {author_dept}"
+            if item.get('body_text'):
+                query_text += f"\n{item['body_text']}"
+            result = matcher.predict(query_text)
             ann = Announcement(
                 source_agency=item["source_agency"],
                 agency_class=item["agency_class"],
