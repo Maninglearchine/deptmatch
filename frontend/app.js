@@ -461,7 +461,8 @@ async function fetchFromAPI() {
   try {
     const res = await fetch(`${API_BASE}/announcements?range=ALL&per_page=200`);
     const json = await res.json();
-    if (json.items && json.items.length > 0) {
+    // API 응답 성공 시 항상 실제 데이터로 교체 (빈 배열이어도 mock 유지 안 함)
+    if (Array.isArray(json.items)) {
       state.data = json.items;
     }
   } catch (e) {
