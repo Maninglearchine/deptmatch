@@ -344,6 +344,11 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+a.card-title:hover {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-skip-ink: auto;
+}
 
 /* 신뢰도 바 행 */
 .card-conf-row {

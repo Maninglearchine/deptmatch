@@ -298,7 +298,8 @@ function cardHTML(item) {
           <span class="card-date">${relativeTime(item.published_at)}</span>
         </div>
         <div class="card-title-row">
-          <div class="card-title">${item.title}</div>
+          <a class="card-title" href="${item.url}" target="_blank" rel="noopener"
+             onclick="event.stopPropagation()">${item.title}</a>
           ${deptBadge}
         </div>
         ${confRow}
@@ -419,8 +420,25 @@ function copyLink(url) {
   navigator.clipboard.writeText(url).then(() => showToast('링크 복사됨'));
 }
 
-function requestRematch(id) {
-  showToast(`#${id} 매칭 재요청 전송 (API 연동 필요)`);
+async function requestRematch(id) {
+  if (!API_BASE) { showToast('API 연결 필요'); return; }
+  showToast('재매칭 요청 중...');
+  try {
+    const res = await fetch(`${API_BASE}/announcements/${id}/rematch`, { method: 'POST' });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const item = state.data.find(d => d.id === id);
+    if (item) {
+      item.matched_dept = data.matched_dept;
+      item.confidence_score = data.confidence_score;
+      item.needs_manual_review = data.needs_manual_review;
+    }
+    showToast(`재매칭 완료: ${data.matched_dept || '미매칭'} (${Math.round(data.confidence_score * 100)}%)`);
+    closeModal();
+    applyFilter();
+  } catch (e) {
+    showToast('재매칭 요청 실패');
+  }
 }
 
 /* ── 토스트 ─────────────────────────────────────────────────── */
@@ -441,11 +459,10 @@ function showToast(msg) {
 async function fetchFromAPI() {
   if (!API_BASE) return;
   try {
-    const res = await fetch(`${API_BASE}/announcements?per_page=100`);
+    const res = await fetch(`${API_BASE}/announcements?range=ALL&per_page=200`);
     const json = await res.json();
-    if (json.items) {
+    if (json.items && json.items.length > 0) {
       state.data = json.items;
-      state.filtered = [...state.data];
     }
   } catch (e) {
     console.warn('API 연결 실패, 목업 데이터 사용:', e.message);
